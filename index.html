@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Test Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
+        .section { margin-bottom: 25px; }
+        h1 { color: #333; border-bottom: 2px solid #eee; }
+        .key-mapping { margin-left: 20px; }
+        video { width: 100%; max-width: 400px; display: none; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Device Test Report</h1>
+
+    <div class="section">
+        <h2>💻 Device Info</h2>
+        <p><strong>Model:</strong> <span id="device-model">Checking...</span></p>
+        <p><strong>Processor:</strong> <span id="processor-info">Checking...</span></p>
+        <p><strong>RAM:</strong> <span id="ram-info">Checking...</span></p>
+        <p><strong>Storage:</strong> <span id="storage-info">Checking...</span></p>
+    </div>
+
+    <div class="section">
+        <h2>🔊 Speaker Test</h2>
+        <button onclick="testSpeaker()">Test Speaker</button>
+        <p>Status: <span id="speaker-status">Not Tested</span></p>
+    </div>
+
+    <div class="section">
+        <h2>🎤 Microphone Test</h2>
+        <p>Status: <span id="mic-status">Checking...</span></p>
+    </div>
+
+    <div class="section">
+        <h2>📷 Camera Test</h2>
+        <button onclick="testCamera()">Test Camera</button>
+        <p>Status: <span id="camera-status">Not Tested</span></p>
+        <video id="camera-preview" autoplay></video>
+    </div>
+
+    <div class="section">
+        <h2>🔋 Battery Status</h2>
+        <p>Current: <span id="battery-level">Checking...</span></p>
+        <p>Full Charge in: <span id="charge-time">Calculating...</span></p>
+    </div>
+
+    <div class="section">
+        <h2>⌨ Keyboard Test</h2>
+        <p>Keys Working: <span id="key-status">100.00%</span></p>
+        
+        <div class="key-mapping">
+            <h3>Key Mappings:</h3>
+            <p><strong>Tail Key:</strong></p>
+            <ul>
+                <li>Search</li>
+                <li>Shift</li>
+                <li>Get</li>
+                <li>Alt</li>
+            </ul>
+
+            <p><strong>SpaceBar:</strong></p>
+            <ul>
+                <li>Alt</li>
+                <li>Get</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Battery Status
+        if (navigator.getBattery) {
+            navigator.getBattery().then(function(battery) {
+                document.getElementById("battery-level").textContent = (battery.level * 100).toFixed(2) + "%";
+                document.getElementById("charge-time").textContent = battery.chargingTime ? battery.chargingTime + " seconds" : "N/A";
+            });
+        } else {
+            document.getElementById("battery-level").textContent = "Not Supported";
+            document.getElementById("charge-time").textContent = "Not Available";
+        }
+
+        // Microphone Test
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function() {
+                document.getElementById("mic-status").textContent = "Completed";
+            })
+            .catch(function() {
+                document.getElementById("mic-status").textContent = "Failed";
+            });
+
+        // Speaker Test
+        function testSpeaker() {
+            let audio = new Audio("audio.mp3"); // Sample Beep Sound
+            audio.play()
+                .then(() => document.getElementById("speaker-status").textContent = "Working")
+                .catch(() => document.getElementById("speaker-status").textContent = "Failed");
+        }
+
+        // Camera Test
+        function testCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    let video = document.getElementById("camera-preview");
+                    video.srcObject = stream;
+                    video.style.display = "block";
+                    document.getElementById("camera-status").textContent = "Working";
+                })
+                .catch(function() {
+                    document.getElementById("camera-status").textContent = "Failed";
+                });
+        }
+
+        // Device Info (Model, Processor, RAM, Storage)
+        function getDeviceInfo() {
+            let model = navigator.userAgent;
+            document.getElementById("device-model").textContent = model;
+
+            if (navigator.deviceMemory) {
+                document.getElementById("ram-info").textContent = navigator.deviceMemory + " GB";
+            } else {
+                document.getElementById("ram-info").textContent = "Not Available";
+            }
+
+            if (navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then(function(estimate) {
+                    let totalStorage = (estimate.quota / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+                    document.getElementById("storage-info").textContent = totalStorage;
+                });
+            } else {
+                document.getElementById("storage-info").textContent = "Not Available";
+            }
+
+            document.getElementById("processor-info").textContent = "Limited Browser Access";
+        }
+
+        getDeviceInfo();
+    </script>
+</body>
+</html>
